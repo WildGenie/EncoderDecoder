@@ -19,7 +19,7 @@ import pickle
 def getNRCS(station_id, param_id, nyears, frequency):
   ndays, yesterday = 365*nyears, datetime.date.today()
   datelist = pd.date_range(end=yesterday, periods=ndays).tolist()
-  
+
   data = StationDailyDataIO(
       start_date=datelist[0],
       end_date=datelist[-1],
@@ -41,16 +41,13 @@ def getNRCS(station_id, param_id, nyears, frequency):
   if missing_data > 100:
     return print('Today is definietly not new years, but the gap in the data is still too large')
   print('Missing data points:', missing_data)
-  if missing_data > 0:
-    new = pd.DataFrame()
-    cols = df.columns
-    interp_df = [new.assign(Interpolant = df[i].interpolate(method='time')) for i in cols][0]
-    interp_df.columns = [station_id]
-    resampled_df = interp_df.resample(frequency).mean()
-    return resampled_df
-  else:
-    resampled_df = df.resample(frequency).mean()
-    return resampled_df
+  if missing_data <= 0:
+    return df.resample(frequency).mean()
+  new = pd.DataFrame()
+  cols = df.columns
+  interp_df = [new.assign(Interpolant = df[i].interpolate(method='time')) for i in cols][0]
+  interp_df.columns = [station_id]
+  return interp_df.resample(frequency).mean()
 
 # Define function for performing a bulk download of all time series files from NRCS API based on a datatype (e.g. snow water equivalent (SWE))
 def bulk_download(parameter, years, frequency):

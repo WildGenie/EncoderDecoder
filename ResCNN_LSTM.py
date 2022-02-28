@@ -38,12 +38,10 @@ def mape(y_test, y_pred):
     return np.mean(np.abs((y_test - y_pred) / y_test))*100, np.abs((y_test - y_pred) / y_test)*100
 
 def sliding_window_input(df, input_length, idx):
-	window = df.values[idx:input_length+idx,:]
-	return window
+    return df.values[idx:input_length+idx,:]
 
 def sliding_window_output(df, input_length, output_length, idx):
-	window = df.values[input_length+idx:input_length+output_length+idx]
-	return window
+    return df.values[input_length+idx:input_length+output_length+idx]
 
 def model_configs():
 	epochs = [100]
@@ -67,82 +65,82 @@ def model_configs():
 	return configs
 
 def build_model(data, config, output_length, X_test, input_length, index, repeats):
-	print('Run:', str(index), '/', str(repeats))
-	# start time
-	start = time.time()
-	print('Configuration:', config)
-	# define parameters
-	epochs, batch_size, n_nodes1, n_nodes2, filter1, filter2, kernel_size = config
-	# convert data to supervised learning environment
-	X_train = np.stack([sliding_window_input(data, input_length, i) for i in range(len(data)-input_length)])[:-output_length]
-	y_train = np.stack([sliding_window_output(data['Upper Stillwater'], input_length, output_length, i) for i in range(len(data)-(input_length+output_length))])
-	y_train = y_train.reshape(y_train.shape[0], y_train.shape[1], 1)
-	print('Feature Training Tensor (samples, timesteps, features):', X_train.shape)
-	print('Target Training Tensor (samples, timesteps, features):', y_train.shape)
-	# define parameters
-	n_timesteps, n_features, n_outputs = X_train.shape[1], X_train.shape[2], y_train.shape[1]
-	# define residual CNN-LSTM
-	visible1 = Input(shape = (n_timesteps,n_features))
-	
-	model = Conv1D(filter1, kernel_size, padding = 'causal')(visible1)
-	residual1 = ReLU()(model)
-	model = Conv1D(filter1, kernel_size, padding = 'causal')(residual1)
-	model = Add()([residual1, model])
-	model = ReLU()(model)
-	
-	model = Conv1D(filter1, kernel_size, padding = 'causal')(model)
-	residual2 = ReLU()(model)
-	model = Conv1D(filter1, kernel_size, padding = 'causal')(residual2)
-	model = Add()([residual2, model])
-	model = ReLU()(model)
-	model = MaxPooling1D()(model)
-	
-	model = Conv1D(filter2, kernel_size, padding = 'causal')(model)
-	residual3 = ReLU()(model)
-	model = Conv1D(filter2, kernel_size, padding = 'causal')(residual3)
-	model = Add()([residual3, model])
-	model = ReLU()(model)
-	
-	model = Conv1D(filter2, kernel_size, padding = 'causal')(model)
-	residual4 = ReLU()(model)
-	model = Conv1D(filter2, kernel_size, padding = 'causal')(residual4)
-	model = Add()([residual4, model])
-	model = ReLU()(model)
-	model = MaxPooling1D()(model)
-	
-	model = Conv1D(n_nodes1, kernel_size, padding = 'causal')(model)
-	residual5 = ReLU()(model)
-	model = Conv1D(n_nodes1, kernel_size, padding = 'causal')(residual5)
-	model = Add()([residual5, model])
-	model = ReLU()(model)
-	
-	model = Conv1D(n_nodes1, kernel_size, padding = 'causal')(model)
-	residual6 = ReLU()(model)
-	model = Conv1D(n_nodes1, kernel_size, padding = 'causal')(residual6)
-	model = Add()([residual6, model])
-	model = ReLU()(model)
-	model = MaxPooling1D()(model)
-	
-	model = Flatten()(model)
-	model = RepeatVector(n_outputs)(model)
-	
-	model = LSTM(n_nodes1, activation='relu', return_sequences=True)(model)
-	model = LSTM(n_nodes1, activation='relu', return_sequences=True)(model)
-	model = LSTM(n_nodes1, activation='relu', return_sequences=True)(model)
-	model = LSTM(n_nodes1, activation='relu', return_sequences=True)(model)
-	
-	dense = TimeDistributed(Dense(n_nodes2, activation='relu'))(model)
-	output = TimeDistributed(Dense(1))(dense)
-	model = Model(inputs = visible1, outputs = output)
-	model.compile(loss='mse', optimizer='adam')
-	#model.summary()
-	# fit network
-	es = EarlyStopping(monitor='loss', mode='min', patience = 10)
-	history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=0, validation_split=0.2, callbacks = [es])
-	# test model against hold-out set
-	y_pred = model.predict(X_test)
-	print('\n Elapsed time:', round((time.time() - start)/60,3), 'minutes')
-	return y_pred, history
+    print('Run:', index, '/', repeats)
+    # start time
+    start = time.time()
+    print('Configuration:', config)
+    # define parameters
+    epochs, batch_size, n_nodes1, n_nodes2, filter1, filter2, kernel_size = config
+    # convert data to supervised learning environment
+    X_train = np.stack([sliding_window_input(data, input_length, i) for i in range(len(data)-input_length)])[:-output_length]
+    y_train = np.stack([sliding_window_output(data['Upper Stillwater'], input_length, output_length, i) for i in range(len(data)-(input_length+output_length))])
+    y_train = y_train.reshape(y_train.shape[0], y_train.shape[1], 1)
+    print('Feature Training Tensor (samples, timesteps, features):', X_train.shape)
+    print('Target Training Tensor (samples, timesteps, features):', y_train.shape)
+    # define parameters
+    n_timesteps, n_features, n_outputs = X_train.shape[1], X_train.shape[2], y_train.shape[1]
+    # define residual CNN-LSTM
+    visible1 = Input(shape = (n_timesteps,n_features))
+
+    model = Conv1D(filter1, kernel_size, padding = 'causal')(visible1)
+    residual1 = ReLU()(model)
+    model = Conv1D(filter1, kernel_size, padding = 'causal')(residual1)
+    model = Add()([residual1, model])
+    model = ReLU()(model)
+
+    model = Conv1D(filter1, kernel_size, padding = 'causal')(model)
+    residual2 = ReLU()(model)
+    model = Conv1D(filter1, kernel_size, padding = 'causal')(residual2)
+    model = Add()([residual2, model])
+    model = ReLU()(model)
+    model = MaxPooling1D()(model)
+
+    model = Conv1D(filter2, kernel_size, padding = 'causal')(model)
+    residual3 = ReLU()(model)
+    model = Conv1D(filter2, kernel_size, padding = 'causal')(residual3)
+    model = Add()([residual3, model])
+    model = ReLU()(model)
+
+    model = Conv1D(filter2, kernel_size, padding = 'causal')(model)
+    residual4 = ReLU()(model)
+    model = Conv1D(filter2, kernel_size, padding = 'causal')(residual4)
+    model = Add()([residual4, model])
+    model = ReLU()(model)
+    model = MaxPooling1D()(model)
+
+    model = Conv1D(n_nodes1, kernel_size, padding = 'causal')(model)
+    residual5 = ReLU()(model)
+    model = Conv1D(n_nodes1, kernel_size, padding = 'causal')(residual5)
+    model = Add()([residual5, model])
+    model = ReLU()(model)
+
+    model = Conv1D(n_nodes1, kernel_size, padding = 'causal')(model)
+    residual6 = ReLU()(model)
+    model = Conv1D(n_nodes1, kernel_size, padding = 'causal')(residual6)
+    model = Add()([residual6, model])
+    model = ReLU()(model)
+    model = MaxPooling1D()(model)
+
+    model = Flatten()(model)
+    model = RepeatVector(n_outputs)(model)
+
+    model = LSTM(n_nodes1, activation='relu', return_sequences=True)(model)
+    model = LSTM(n_nodes1, activation='relu', return_sequences=True)(model)
+    model = LSTM(n_nodes1, activation='relu', return_sequences=True)(model)
+    model = LSTM(n_nodes1, activation='relu', return_sequences=True)(model)
+
+    dense = TimeDistributed(Dense(n_nodes2, activation='relu'))(model)
+    output = TimeDistributed(Dense(1))(dense)
+    model = Model(inputs = visible1, outputs = output)
+    model.compile(loss='mse', optimizer='adam')
+    #model.summary()
+    # fit network
+    es = EarlyStopping(monitor='loss', mode='min', patience = 10)
+    history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=0, validation_split=0.2, callbacks = [es])
+    # test model against hold-out set
+    y_pred = model.predict(X_test)
+    print('\n Elapsed time:', round((time.time() - start)/60,3), 'minutes')
+    return y_pred, history
 
 def get_stats(y_pred, y_test):
 	print('Mean Absolute Error:', round((mean_absolute_error(y_test, y_pred)/np.mean(y_test))*100,3), '%')
